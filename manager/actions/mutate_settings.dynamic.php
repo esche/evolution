@@ -30,7 +30,7 @@ $number_of_settings = mysql_num_rows($rs);
 while ($row = mysql_fetch_assoc($rs)) $settings[$row['setting_name']] = $row['setting_value'];
 extract($settings, EXTR_OVERWRITE);
 
-$displayStyle = ( ($_SESSION['browser']=='mz') || ($_SESSION['browser']=='op') || ($_SESSION['browser']=='sf') ) ? "table-row" : "block" ;
+$displayStyle = ($_SESSION['browser']!=='ie') ? 'table-row' : 'block' ;
 
 // load languages and keys
 $lang_keys = array();
@@ -190,13 +190,15 @@ function confirmLangChange(el, lkey, elupd){
     <input type="hidden" name="site_id" value="<?php echo $site_id; ?>" />
     <input type="hidden" name="settings_version" value="<?php echo $modx_version; ?>" />
     <!-- this field is used to check site settings have been entered/ updated after install or upgrade -->
-    <?php if(!isset($settings_version) || $settings_version!=$modx_version) { ?>
+    <?php if(!isset($settings_version) || $settings_version!=$modx_version) {
+    include(MODX_MANAGER_PATH.'includes/locale/' . $manager_language . '/system_settings.php');
+    ?>
     <div class='sectionBody'><p><?php echo $_lang['settings_after_install']; ?></p></div>
     <?php } ?>
     <script type="text/javascript" src="media/script/tabpane.js"></script>
     <div class="tab-pane" id="settingsPane">
       <script type="text/javascript">
-		tpSettings = new WebFXTabPane( document.getElementById( "settingsPane" ), <?php echo $modx->config['remember_last_tab'] == 1 ? 'true' : 'false'; ?> );
+		tpSettings = new WebFXTabPane( document.getElementById( "settingsPane" ), <?php echo $modx->config['remember_last_tab'] == 0 ? 'false' : 'true'; ?> );
 	</script>
 
 	<!-- Site Settings -->
@@ -914,23 +916,41 @@ function confirmLangChange(el, lkey, elupd){
             </tr>
              <tr>
       		   <td nowrap class="warning"><b><?php echo $_lang["tree_page_click"] ?></b></td>
-      		   <td> <input onchange="documentDirty=true;" type="radio" name="tree_page_click" value="27" <?php echo $tree_page_click=='27' ? 'checked="checked"' : ""; ?> />
+      		   <td> <input onchange="documentDirty=true;" type="radio" name="tree_page_click" value="27" <?php echo ($tree_page_click=='27' || !isset($tree_page_click)) ? 'checked="checked"' : ""; ?> />
       			 <?php echo $_lang["edit_resource"]?><br />
-      			 <input onchange="documentDirty=true;" type="radio" name="tree_page_click" value="3" <?php echo ($tree_page_click=='3' || !isset($tree_page_click)) ? 'checked="checked"' : ""; ?> />
+      			 <input onchange="documentDirty=true;" type="radio" name="tree_page_click" value="3" <?php echo ($tree_page_click=='3') ? 'checked="checked"' : ""; ?> />
       			 <?php echo $_lang["doc_data_title"]?></td>
       		 </tr>
              <tr>
                <td width="200">&nbsp;</td>
                <td class='comment'><?php echo $_lang["tree_page_click_message"]?></td>
              </tr>
-             <tr>
+            <tr>
               <td colspan="2"><div class='split'></div></td>
             </tr>
+            <?php
+                $remember_last_tab_checked2 = '';
+                $remember_last_tab_checked1 = '';
+                $remember_last_tab_checked0 = '';
+                switch($remember_last_tab)
+                {
+                    case '2':
+                    $remember_last_tab_checked2 = 'checked="checked"';
+                    break;
+                    case '1':
+                    $remember_last_tab_checked1 = 'checked="checked"';
+                    break;
+                    default:
+                    $remember_last_tab_checked0 = 'checked="checked"';
+                }
+            ?>
              <tr>
                <td nowrap class="warning"><b><?php echo $_lang["remember_last_tab"] ?></b></td>
-               <td> <input onchange="documentDirty=true;" type="radio" name="remember_last_tab" value="1" <?php echo $remember_last_tab=='1' ? 'checked="checked"' : ""; ?> />
-                 <?php echo $_lang["yes"]?><br />
-                 <input onchange="documentDirty=true;" type="radio" name="remember_last_tab" value="0" <?php echo (!isset($remember_last_tab) || $remember_last_tab=='0') ? 'checked="checked"' : ""; ?> />
+               <td> <input onchange="documentDirty=true;" type="radio" name="remember_last_tab" value="2" <?php echo $remember_last_tab_checked2; ?> />
+                 <?php echo $_lang["yes"]?> (Full)<br />
+ <input onchange="documentDirty=true;" type="radio" name="remember_last_tab" value="1" <?php echo $remember_last_tab_checked1; ?> />
+                 <?php echo $_lang["yes"]?> (Stay mode)<br />
+                 <input onchange="documentDirty=true;" type="radio" name="remember_last_tab" value="0" <?php echo $remember_last_tab_checked0; ?> />
                  <?php echo $_lang["no"]?></td>
              </tr>
              <tr>
@@ -1095,14 +1115,14 @@ function confirmLangChange(el, lkey, elupd){
           <tr id='rbRow4' class='row3' style="display: <?php echo $use_browser==1 ? $displayStyle : 'none' ; ?>">
             <td nowrap class="warning"><b><?php echo $_lang["rb_base_dir_title"]?></b></td>
             <td><?php
-			function getResourceBaseDir() {
-				global $base_path;
-				return $base_path."assets/";
-			}
+				function getResourceBaseDir() {
+					global $base_path;
+					return $base_path."assets/";
+				}
 		?>
                 <?php echo $_lang['default']; ?> <span id="default_rb_base_dir"><?php echo getResourceBaseDir()?></span><br />
                 <input onchange="documentDirty=true;" type='text' maxlength='255' style="width: 250px;" name="rb_base_dir" id="rb_base_dir" value="<?php echo isset($rb_base_dir) ? $rb_base_dir : getResourceBaseDir() ; ?>" /> <input type="button" onclick="reset_path('rb_base_dir');" value="<?php echo $_lang["reset"]; ?>" name="reset_rb_base_dir">
-            </td>
+              </td>
           </tr>
           <tr id='rbRow5' class='row3' style="display: <?php echo $use_browser==1 ? $displayStyle : 'none' ; ?>">
             <td width="200">&nbsp;</td>

@@ -34,9 +34,7 @@ switch ($_REQUEST['a']) {
 }
 
 
-if (isset($_REQUEST['id']))
-        $id = (int)$_REQUEST['id'];
-else    $id = 0;
+$id = $_REQUEST['id'];
 
 if ($manager_theme)
         $manager_theme .= '/';
@@ -507,6 +505,7 @@ $evtOut = $modx->invokeEvent('OnDocFormPrerender', array(
 ));
 if (is_array($evtOut))
 	echo implode('', $evtOut);
+$_SESSION['itemname'] = htmlspecialchars(stripslashes($content['pagetitle']));
 ?>
 <input type="hidden" name="a" value="5" />
 <input type="hidden" name="id" value="<?php echo $content['id']?>" />
@@ -549,7 +548,7 @@ if (is_array($evtOut))
 
 <div class="tab-pane" id="documentPane">
 	<script type="text/javascript">
-	tpSettings = new WebFXTabPane( document.getElementById( "documentPane" ), <?php echo $modx->config['remember_last_tab'] == 1 ? 'true' : 'false'; ?> );
+	tpSettings = new WebFXTabPane( document.getElementById( "documentPane" ), <?php echo (($modx->config['remember_last_tab'] == 2) || ($_GET['stay'] == 2 )) ? 'true' : 'false'; ?> );
 	</script>
 
 	<!-- General -->
@@ -627,7 +626,7 @@ if (is_array($evtOut))
 				&nbsp;&nbsp;<img src="<?php echo $_style["icons_tooltip_over"]?>" onmouseover="this.src='<?php echo $_style["icons_tooltip"]?>';" onmouseout="this.src='<?php echo $_style["icons_tooltip_over"]?>';" alt="<?php echo $_lang['resource_opt_menu_title_help']?>" onclick="alert(this.alt);" style="cursor:help;" /></td></tr>
 			<tr style="height: 24px;"><td align="left" style="width:100px;"><span class="warning"><?php echo $_lang['resource_opt_menu_index']?></span></td>
 				<td><table border="0" cellspacing="0" cellpadding="0" style="width:333px;"><tr>
-					<td><input name="menuindex" type="text" maxlength="3" value="<?php echo $content['menuindex']?>" class="inputBox" style="width:30px;" onchange="documentDirty=true;" /><input type="button" value="&lt;" onclick="var elm = document.mutate.menuindex;var v=parseInt(elm.value+'')-1;elm.value=v>0? v:0;elm.focus();documentDirty=true;" /><input type="button" value="&gt;" onclick="var elm = document.mutate.menuindex;var v=parseInt(elm.value+'')+1;elm.value=v>0? v:0;elm.focus();documentDirty=true;" />
+					<td><input name="menuindex" type="text" maxlength="3" value="<?php echo $content['menuindex']?>" class="inputBox number" style="width:30px;" onchange="documentDirty=true;" /><input type="button" value="&lt;" onclick="var elm = document.mutate.menuindex;var v=parseInt(elm.value+'')-1;elm.value=v>0? v:0;elm.focus();documentDirty=true;" /><input type="button" value="&gt;" onclick="var elm = document.mutate.menuindex;var v=parseInt(elm.value+'')+1;elm.value=v>0? v:0;elm.focus();documentDirty=true;" />
 					&nbsp;&nbsp;<img src="<?php echo $_style["icons_tooltip_over"]?>" onmouseover="this.src='<?php echo $_style["icons_tooltip"]?>';" onmouseout="this.src='<?php echo $_style["icons_tooltip_over"]?>';" alt="<?php echo $_lang['resource_opt_menu_index_help']?>" onclick="alert(this.alt);" style="cursor:help;" /></td>
 					<td align="right" style="text-align:right;"><span class="warning"><?php echo $_lang['resource_opt_show_menu']?></span>&nbsp;<input name="hidemenucheck" type="checkbox" class="checkbox" <?php echo $content['hidemenu']!=1 ? 'checked="checked"':''?> onclick="changestate(document.mutate.hidemenu);" /><input type="hidden" name="hidemenu" class="hidden" value="<?php echo ($content['hidemenu']==1) ? 1 : 0?>" />
 					&nbsp;<img src="<?php echo $_style["icons_tooltip_over"]?>" onmouseover="this.src='<?php echo $_style["icons_tooltip"]?>';" onmouseout="this.src='<?php echo $_style["icons_tooltip_over"]?>';" alt="<?php echo $_lang['resource_opt_show_menu_help']?>" onclick="alert(this.alt);" style="cursor:help;" /></td>
@@ -684,33 +683,9 @@ if (is_array($evtOut))
 			<div class="sectionBody" id="content_body">
 			<?php
 			if (($content['richtext'] == 1 || $_REQUEST['a'] == '4') && $use_editor == 1) {
-				// replace image path
-				$htmlContent = $content['content'];
-				if (!empty ($htmlContent)) {
-					if (substr($rb_base_url, -1) != '/')
-					        $im_base_url = $rb_base_url . '/';
-					else    $im_base_url = $rb_base_url;
-
-					$elements = parse_url($im_base_url);
-					$image_path = $elements['path'];
-
-					// make sure image path ends with a /
-					if (substr($image_path, -1) != '/')
-						$image_path .= '/';
-
-					$modx_root = dirname(dirname($_SERVER['PHP_SELF']));
-					$image_prefix = substr($image_path, strlen($modx_root));
-					if (substr($image_prefix, -1) != '/')
-						$image_prefix .= '/';
-
-					// escape / in path
-					$image_prefix = str_replace('/', '\/', $image_prefix);
-					$newcontent = preg_replace("/(<img[^>]+src=['\"])($image_prefix)([^'\"]+['\"][^>]*>)/", "\${1}$im_base_url\${3}", $content['content']);
-					$htmlContent = $newcontent;
-				}
 			?>
 				<div style="width:100%">
-					<textarea id="ta" name="ta" style="width:100%; height: 400px;" onchange="documentDirty=true;"><?php echo htmlspecialchars($htmlContent)?></textarea>
+					<textarea id="ta" name="ta" style="width:100%; height: 400px;" onchange="documentDirty=true;"><?php echo htmlspecialchars($content['content'])?></textarea>
 					<span class="warning"><?php echo $_lang['which_editor_title']?></span>
 
 					<select id="which_editor" name="which_editor" onchange="changeRTE();">
@@ -784,9 +759,11 @@ if (is_array($evtOut))
 							echo "\t\t",'<tr><td colspan="2"><div class="split"></div></td></tr>',"\n";
 
 						$tvPBV = array_key_exists('tv'.$row['id'], $_POST) ? $_POST['tv'.$row['id']] : $row['value']; // post back value
+//						$tvPBV = ProcessTVCommand($tvPBV, $row['name'], $content['id']); //yama
+						$dp_z_index = 500 - $i;
 						echo "\t\t",'<tr style="height: 24px;"><td align="left" valign="top" width="150"><span class="warning">',$row['caption'],"</span>\n",
 						     "\t\t\t",'<br /><span class="comment">',$row['description'],"</span></td>\n",
-						     "\t\t\t",'<td valign="top" style="position:relative;',($row['type'] == 'date' ? 'z-index:500;' : ''),'">',"\n",
+						     "\t\t\t",'<td valign="top" style="position:relative;',($row['type'] == 'date' ? 'z-index:' . $dp_z_index . ';' : ''),'">',"\n",
 						     "\t\t\t",renderFormElement($row['type'], $row['id'], $row['default_text'], $row['elements'], $tvPBV, ' style="width:300px;"'),"\n",
 						     "\t\t</td></tr>\n";
 					}
@@ -812,7 +789,7 @@ if (is_array($evtOut))
 		<?php $mx_can_pub = $modx->hasPermission('publish_document') ? '' : 'disabled="disabled" '; ?>
 			<tr style="height: 24px;">
 				<td><span class="warning"><?php echo $_lang['resource_opt_published']?></span></td>
-				<td><input <?php echo $mx_can_pub ?>name="publishedcheck" type="checkbox" class="checkbox" <?php echo (isset($content['published']) && $content['published']==1) || (!isset($content['published']) && $publish_default==1) ? "checked" : ''?> onclick="changestate(document.mutate.published);" />
+				<td><input <?php echo $mx_can_pub ?>name="publishedcheck" type="checkbox" class="checkbox" <?php echo (isset($content['published']) && $content['published']==1) || (!isset($content['published']) && $publish_default==1) ? "checked" : ''?> onclick="changestate(document.mutate.published);" <?php if($id==$modx->config['site_start']) echo 'disabled ' ?>/>
 				<input type="hidden" name="published" value="<?php echo (isset($content['published']) && $content['published']==1) || (!isset($content['published']) && $publish_default==1) ? 1 : 0?>" />
 				&nbsp;&nbsp;<img src="<?php echo $_style["icons_tooltip_over"]?>" onmouseover="this.src='<?php echo $_style["icons_tooltip"]?>';" onmouseout="this.src='<?php echo $_style["icons_tooltip_over"]?>';" alt="<?php echo $_lang['resource_opt_published_help']?>" onclick="alert(this.alt);" style="cursor:help;" /></td>
 			</tr>
@@ -1018,7 +995,7 @@ if ($_SESSION['mgrRole'] == 1 || $_REQUEST['a'] != '27' || $_SESSION['mgrInterna
 				?>
 				</select>
 				<br />
-				<input type="button" value="<?php echo $_lang['deselect_metatags']?>" onclick="clearMetatagSelection();" />
+				<input type="button" class="button" value="<?php echo $_lang['deselect_metatags']?>" onclick="clearMetatagSelection();" />
 			</td>
 			</table>
 			</td>
@@ -1103,7 +1080,7 @@ if ($use_udperms == 1) {
 		foreach ($inputAttributes as $k => $v) $inputString[] = $k.'="'.$v.'"';
 
 		// Make the <input> HTML
-		$inputHTML = '<input '.implode(' ', $inputString).' />';
+		$inputHTML = '<input '.implode(' ', $inputString). (($id==$modx->config['site_start']) ? ' disabled' : '') . ' />';
 
 		// does user have this permission?
 		$sql = "SELECT COUNT(mg.id) FROM {$tbl_membergroup_access} mga, {$tbl_member_groups} mg

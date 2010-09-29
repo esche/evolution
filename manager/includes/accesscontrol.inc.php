@@ -95,7 +95,7 @@ if(!isset($_SESSION['mgrValidated'])){
 	}
 
 	// login info
-	$uid =  isset($_COOKIE['modx_remember_manager']) ? preg_replace('/[^a-zA-Z0-9\-_]*/', '',  $_COOKIE['modx_remember_manager']) :''; 
+	$uid =  isset($_COOKIE['modx_remember_manager']) ? preg_replace('/[^a-zA-Z0-9\-_@\.]*/', '',  $_COOKIE['modx_remember_manager']) :''; 
 	$modx->setPlaceholder('uid',$uid);
 	$modx->setPlaceholder('username',$_lang["username"]);
 	$modx->setPlaceholder('password',$_lang["password"]);
@@ -112,7 +112,11 @@ if(!isset($_SESSION['mgrValidated'])){
 	$modx->setPlaceholder('OnManagerLoginFormRender',$html);
 
 	// load template file
-    $tplFile = $base_path.'assets/templates/manager/login.html';
+	$tplFile = MODX_BASE_PATH . 'assets/templates/manager/login.html';
+	if(file_exists($tplFile)==false)
+	{
+		$tplFile = MODX_BASE_PATH . 'manager/media/style/' . $modx->config['manager_theme'] . '/manager/login.html';
+	}
     $handle = fopen($tplFile, "r");
 	$tpl = fread($handle, filesize($tplFile));
 	fclose($handle);
@@ -138,12 +142,12 @@ if(!isset($_SESSION['mgrValidated'])){
 	
 	$_SESSION['ip'] = $ip;
 
-    $itemid = isset($_REQUEST['id']) ? (int) $_REQUEST['id'] : '';
-    $lasthittime = time();
+    $itemid = $_REQUEST['id'] > 0 ? $_REQUEST['id'] : '';
+	$lasthittime = time();
     $action = isset($_REQUEST['a']) ? (int) $_REQUEST['a'] : 1;
 
     if($action !== 1) {
-			if (!intval($itemid)) $itemid= null;
+		if (!intval($itemid)) $itemid= null;
 		$sql = sprintf('REPLACE INTO %s (internalKey, username, lasthit, action, id, ip)
 			VALUES (%d, \'%s\', \'%d\', \'%s\', %s, \'%s\')',
 			$modx->getFullTableName('active_users'), // Table

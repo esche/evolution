@@ -738,7 +738,7 @@ class DocumentParser {
     // evalPlugin
     function evalPlugin($pluginCode, $params) {
         $etomite= $modx= & $this;
-        $modx->event->params= & $params; // store params inside event object
+        $modx->event->params = $params; // store params inside event object
         if (is_array($params)) {
             extract($params, EXTR_SKIP);
         }
@@ -762,7 +762,7 @@ class DocumentParser {
     function evalSnippet($snippet, $params) {
         $etomite= $modx= & $this;
 
-        $modx->event->params= & $params; // store params inside event object
+        $modx->event->params = $params; // store params inside event object
         if (is_array($params)) {
             extract($params, EXTR_SKIP);
         }
@@ -1016,6 +1016,7 @@ class DocumentParser {
                 if ($st != $et)
                     $passes++; // if content change then increase passes because
             } // we have not yet reached maxParserPasses
+//            $source = $this->rewriteUrls($source);//yama
         }
         return $source;
     }
@@ -1602,6 +1603,7 @@ class DocumentParser {
     function getVersionData() {
         include $this->config["base_path"] . "manager/includes/version.inc.php";
         $v= array ();
+        $v['code_name']= $code_name;
         $v['version']= $modx_version;
         $v['branch']= $modx_branch;
         $v['release_date']= $modx_release_date;
@@ -2632,9 +2634,9 @@ class DocumentParser {
     function messageQuit($msg= 'unspecified error', $query= '', $is_error= true, $nr= '', $file= '', $source= '', $text= '', $line= '') {
 
         $version= isset ($GLOBALS['version']) ? $GLOBALS['version'] : '';
-		$release_date= isset ($GLOBALS['release_date']) ? $GLOBALS['release_date'] : '';
+        $code_name= isset ($GLOBALS['code_name']) ? $GLOBALS['code_name'] : '';
         $parsedMessageString= "
-              <html><head><title>MODx Content Manager $version &raquo; $release_date</title>
+              <html><head><title>MODx Content Manager $version &raquo; $code_name</title>
               <style>TD, BODY { font-size: 11px; font-family:verdana; }</style>
               <script type='text/javascript'>
               function copyToClip()

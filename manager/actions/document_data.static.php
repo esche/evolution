@@ -1,9 +1,7 @@
 <?php
 if (IN_MANAGER_MODE!='true') die("<b>INCLUDE_ORDERING_ERROR</b><br /><br />Please use the MODx Content Manager instead of accessing this file directly.");
 
-if (isset($_REQUEST['id']))
-        $id = (int)$_REQUEST['id'];
-else    $id = 0;
+$id = $_REQUEST['id'];
 
 if (isset($_GET['opened'])) $_SESSION['openedArray'] = $_GET['opened'];
 
@@ -226,7 +224,7 @@ function movedocument() {
 
 <div class="tab-pane" id="childPane">
 	<script type="text/javascript">
-	docSettings = new WebFXTabPane( document.getElementById( "childPane" ), <?php echo $modx->config['remember_last_tab'] == 1 ? 'true' : 'false'; ?> );
+	docSettings = new WebFXTabPane( document.getElementById( "childPane" ), <?php echo $modx->config['remember_last_tab'] == 0 ? 'false' : 'true'; ?> );
 	</script>
 
 	<!-- General -->

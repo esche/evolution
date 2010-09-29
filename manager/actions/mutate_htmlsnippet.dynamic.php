@@ -19,9 +19,7 @@ switch ((int) $_REQUEST['a']) {
 		$e->dumpError();
 }
 
-if (isset($_REQUEST['id']))
-        $id = (int)$_REQUEST['id'];
-else    $id = 0;
+$id = $_REQUEST['id'];
 
 if ($manager_theme)
         $manager_theme .= '/';
@@ -47,7 +45,7 @@ if ($limit > 1) {
 }
 
 $content = array();
-if (isset($_REQUEST['id']) && $_REQUEST['id']!='' && is_numeric($_REQUEST['id'])) {
+if ($id > 0) {
 	$sql = 'SELECT * FROM '.$tbl_site_htmlsnippets.' WHERE id=\''.$id.'\'';
 	$rs = mysql_query($sql);
 	$limit = mysql_num_rows($rs);
@@ -180,7 +178,7 @@ if (is_array($evtOut))
 
 	<div style="width:100%; position:relative;">
 		<div style="padding:1px; width:100%; height:16px; background-color:#eeeeee; border:1px solid #e0e0e0; margin-top:5px;">
-			<span style="color:brown; font-weight:bold; padding:3px;">&nbsp;<?php echo $_lang['chunk_code']?></span>
+			<span style="font-weight:bold;">&nbsp;<?php echo $_lang['chunk_code']?></span>
 		</div>
 		<textarea dir="ltr" name="post" style="width:100%; height:370px;" onChange="documentDirty=true;"><?php echo isset($content['post']) ? htmlspecialchars($content['post']) : htmlspecialchars($content['snippet'])?></textarea>
 		</div>
